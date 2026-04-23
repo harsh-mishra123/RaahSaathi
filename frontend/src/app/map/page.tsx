@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from 'react';
 import Header from '@/components/shared/Header';
-import { MapComponent } from '@/components/map/Map';
+import MapComponent from '@/components/map/Map';
 import FloatingPanel from '@/components/map/FloatingPanel';
 import FloatingActionButton from '@/components/map/FloatingActionButton';
 import { LocationMap } from '@/components/ui/expand-map';

@@ -4,7 +4,7 @@ import Header from "@/components/shared/Header";
 import Footer from "@/components/shared/Footer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { MapComponent as Map } from '@/components/map/Map';
+import Map from '@/components/map/Map';
 import { ArrowRight, MapPin, Zap } from 'lucide-react';
 
 export default function RoutePlannerPage() {

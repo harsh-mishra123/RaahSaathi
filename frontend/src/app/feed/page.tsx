@@ -8,7 +8,7 @@ export default function FeedPage() {
   return (
     <div className="flex flex-col min-h-screen bg-zinc-900 text-white">
       <Header />
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <main className="flex-grow container mx-auto px-4 py-8 max-w-5xl">
         {/* Page Title */}
         <div className="mb-6 text-center">
           <h1 className="text-3xl font-bold">Barrier Feed</h1>

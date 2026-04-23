@@ -79,8 +79,8 @@ class SupabaseService:
     async def create_barrier(self, barrier_data: Dict, user_id: str) -> Optional[Dict]:
         """Create a new barrier report"""
         try:
-            barrier_data_dict = barrier_data.dict()
-            barrier_data_dict['user_id'] = user_id
+            barrier_data_dict = barrier_data.model_dump()
+            barrier_data_dict['reported_by'] = user_id
             # Add PostGIS point geometry (format: "POINT(lng lat)")
             barrier_data_dict['location'] = f"POINT({barrier_data_dict['longitude']} {barrier_data_dict['latitude']})"
             
@@ -170,6 +170,40 @@ class SupabaseService:
             logger.error(f"Error getting nearby barriers via RPC: {e}")
             # Fallback to manual calculation
             return await self._get_barriers_nearby_fallback(latitude, longitude, radius_meters, status, category, limit)
+
+    async def cast_vote(self, barrier_id: str, user_id: str, vote_type: str) -> Optional[Dict]:
+        """Cast or update a vote on a barrier"""
+        try:
+            # This would be a transaction in a real DB
+            # 1. Upsert vote
+            vote_data = {'barrier_id': barrier_id, 'user_id': user_id, 'vote_type': vote_type}
+            self.client.table('votes').upsert(vote_data, on_conflict='barrier_id, user_id').execute()
+
+            # 2. Recalculate scores (ideally a DB trigger)
+            upvotes = self.client.table('votes').select('id', count='exact').eq('barrier_id', barrier_id).eq('vote_type', 'upvote').execute().count
+            downvotes = self.client.table('votes').select('id', count='exact').eq('barrier_id', barrier_id).eq('vote_type', 'downvote').execute().count
+            
+            # 3. Update barrier
+            update_response = self.client.table('barriers').update({'upvotes': upvotes, 'downvotes': downvotes}).eq('id', barrier_id).execute()
+            
+            if not update_response.data:
+                return None
+
+            return await self.get_barrier_by_id(barrier_id)
+
+        except Exception as e:
+            logger.error(f"Error casting vote: {e}")
+            raise
+
+    async def add_comment(self, barrier_id: str, user_id: str, content: str) -> Optional[Dict]:
+        """Add a comment to a barrier"""
+        try:
+            comment_data = {'barrier_id': barrier_id, 'user_id': user_id, 'content': content}
+            response = self.client.table('comments').insert(comment_data).execute()
+            return response.data[0] if response.data else None
+        except Exception as e:
+            logger.error(f"Error adding comment: {e}")
+            raise
     
     async def _get_barriers_nearby_fallback(
         self, 

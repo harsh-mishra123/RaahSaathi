@@ -11,7 +11,7 @@ router = APIRouter(tags=["classification"])
 classification_service = ClassificationService()
 
 @router.post(
-    "/",
+    "",
     response_model=ClassificationResponse,
     responses={
         400: {"model": ErrorResponse},

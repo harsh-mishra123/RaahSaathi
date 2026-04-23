@@ -1,9 +1,11 @@
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from app.services.supabase_service import supabase_service
 from app.models.barrier import BarrierCreate, BarrierResponse
+from app.models.user import User
+from app.services.auth_service import get_current_user
 
 router = APIRouter(prefix="/barriers", tags=["barriers"])
 
@@ -41,15 +43,12 @@ async def get_barrier_details(barrier_id: str):
             detail=str(e)
         )
 
-@router.post("/", response_model=BarrierResponse, status_code=status.HTTP_201_CREATED)
-async def create_barrier(barrier_data: BarrierCreate):
+@router.post("", response_model=BarrierResponse, status_code=status.HTTP_201_CREATED)
+async def create_barrier(barrier_data: BarrierCreate, current_user: User = Depends(get_current_user)):
     try:
-        # In a real app, you'd get the user_id from an auth token
-        user_id = "a_valid_user_id_placeholder" # Replace with actual user ID
-        
         new_barrier = await supabase_service.create_barrier(
             barrier_data=barrier_data,
-            user_id=user_id
+            user_id=current_user.id
         )
         return new_barrier
     except Exception as e:
@@ -59,44 +58,41 @@ async def create_barrier(barrier_data: BarrierCreate):
         )
 
 class VoteRequest(BaseModel):
-    direction: int # 1 for upvote, -1 for downvote
+    user_id: str
+    vote_type: str
 
 @router.post("/{barrier_id}/vote", response_model=BarrierResponse)
 async def cast_vote(barrier_id: str, vote_request: VoteRequest):
     try:
-        # In a real app, you'd get the user_id from an auth token
-        user_id = "a_valid_user_id_placeholder" # Replace with actual user ID
-        
         updated_barrier = await supabase_service.cast_vote(
             barrier_id=barrier_id,
-            user_id=user_id,
-            direction=vote_request.direction
+            user_id=vote_request.user_id,
+            vote_type=vote_request.vote_type
         )
+        if not updated_barrier:
+            raise HTTPException(status_code=404, detail="Barrier not found or vote failed")
         return updated_barrier
     except Exception as e:
-        # This could be a unique constraint violation if the user already voted
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to cast vote: {str(e)}"
         )
 
 class CommentCreate(BaseModel):
+    user_id: str
     content: str
 
 @router.post("/{barrier_id}/comments", status_code=status.HTTP_201_CREATED)
 async def post_comment(barrier_id: str, comment_data: CommentCreate):
     try:
-        # In a real app, you'd get the user_id from an auth token
-        user_id = "a_valid_user_id_placeholder" # Replace with actual user ID
-        
         new_comment = await supabase_service.add_comment(
             barrier_id=barrier_id,
-            user_id=user_id,
+            user_id=comment_data.user_id,
             content=comment_data.content
         )
         return new_comment
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to post comment: {str(e)}"
+            detail=f"Failed to add comment: {str(e)}"
         )

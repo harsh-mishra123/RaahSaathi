@@ -11,29 +11,76 @@ const tabs = [
   { value: 'top', label: 'Top', icon: TrendingUp },
 ];
 
+const mockFeedBarriers: BarrierData[] = [
+  {
+    id: 'b1',
+    title: 'Huge crack outside MG Road Metro',
+    username: 'priya_navigates',
+    description: 'A large crack spans the entire footpath just outside the metro station exit on MG Road. Making it completely impassable for wheelchair users.',
+    category: 'Broken Pavement',
+    location: 'MG Road Metro Station, Bangalore',
+    severity: 'Severe',
+    image_url: 'https://images.unsplash.com/photo-1568605117036-5fe5e7185743?q=80&w=2940&auto=format&fit=crop',
+    upvotes: 142,
+    downvotes: 4,
+    created_at: '2024-05-20T10:30:00Z',
+    comment_count: 15
+  },
+  {
+    id: 'b2',
+    title: 'Scaffolding blocking the entire sidewalk',
+    username: 'rahul_walker',
+    description: 'Construction scaffolding blocks the entire sidewalk, forcing pedestrians to walk on the busy street.',
+    category: 'Construction',
+    location: 'Brigade Road, Bangalore',
+    severity: 'Severe',
+    image_url: 'https://images.unsplash.com/photo-1541888009257-88981f964098?q=80&w=2940&auto=format&fit=crop',
+    upvotes: 89,
+    downvotes: 2,
+    created_at: '2024-05-21T08:15:00Z',
+    comment_count: 8
+  },
+  {
+    id: 'b3',
+    title: 'No curb cut at major intersection',
+    username: 'access_advocate',
+    description: 'There is no curb cut at this major intersection, making it very difficult for strollers and wheelchairs to cross.',
+    category: 'Missing Ramp',
+    location: 'Indiranagar 100ft Road, Bangalore',
+    severity: 'Moderate',
+    image_url: 'https://images.unsplash.com/photo-1574092496253-1cc7099f6b92?q=80&w=2940&auto=format&fit=crop',
+    upvotes: 256,
+    downvotes: 12,
+    created_at: '2024-05-18T14:45:00Z',
+    comment_count: 32
+  },
+  {
+    id: 'b4',
+    title: 'Tactile paving completely worn out',
+    username: 'safe_steps',
+    description: 'The tactile paving here is completely worn out, providing no guidance for visually impaired individuals.',
+    category: 'Tactile Paving',
+    location: 'HSR Layout Sector 1, Bangalore',
+    severity: 'Minor',
+    image_url: 'https://images.unsplash.com/photo-1621509172205-d143c7b3967b?q=80&w=2940&auto=format&fit=crop',
+    upvotes: 45,
+    downvotes: 1,
+    created_at: '2024-05-22T09:20:00Z',
+    comment_count: 3
+  }
+];
+
 const FeedTabs = () => {
   const [barriers, setBarriers] = useState<BarrierData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchBarriers = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch('http://localhost:8000/api/v1/barriers/nearby');
-        if (!response.ok) {
-          throw new Error('Failed to fetch barriers');
-        }
-        const data = await response.json();
-        setBarriers(data);
-      } catch (error) {
-        console.error(error);
-        // Handle error, maybe show a message to the user
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBarriers();
+    // Simulate API fetch delay
+    const timer = setTimeout(() => {
+      setBarriers(mockFeedBarriers);
+      setLoading(false);
+    }, 800);
+    return () => clearTimeout(timer);
   }, []);
 
   const getSortedBarriers = (sortBy: 'hot' | 'new' | 'top') => {
@@ -50,7 +97,7 @@ const FeedTabs = () => {
   };
 
   if (loading) {
-    return <div>Loading barriers...</div>;
+    return <div className="text-zinc-400 py-8 text-center animate-pulse">Loading barriers...</div>;
   }
 
   return (

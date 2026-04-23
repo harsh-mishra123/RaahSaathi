@@ -1,3 +1,5 @@
+"use client";
+
 import { Card, CardCanvas } from "@/components/ui/animated-glow-card";
 import { XCard } from "@/components/ui/x-gradient-card";
 import Link from "next/link";

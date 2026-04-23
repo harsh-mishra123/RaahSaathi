@@ -3,10 +3,11 @@ import { Check } from 'lucide-react';
 
 interface StepIndicatorProps {
   currentStep: number;
-  steps: { label: string; icon: React.ReactNode }[];
+  steps: string[];
+  onStepClick: (index: number) => void;
 }
 
-export const StepIndicator = ({ steps, currentStep, onStepClick }) => {
+export const StepIndicator = ({ steps, currentStep, onStepClick }: StepIndicatorProps) => {
   return (
     <ol className="flex items-center justify-center">
       {steps.map((step, index) => {

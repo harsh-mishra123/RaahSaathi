@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import logging
 
 from app.config import settings
-from app.api.v1 import classify, health, barriers, barriers, barriers  # ← ADD barriers here
+from app.api.v1 import classify, health, barriers
 from app.core.middleware import add_middleware
 
 # Configure logging
@@ -33,9 +33,9 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(health.router, prefix="/api/v1/health", tags=["health"])
+app.include_router(health.router, prefix="/api/v1", tags=["health"])
 app.include_router(classify.router, prefix="/api/v1/classify", tags=["classification"])
-app.include_router(barriers.router, prefix="/api/v1/barriers", tags=["barriers"])
+app.include_router(barriers.router, prefix="/api/v1", tags=["barriers"])
 
 @app.get("/")
 async def root():

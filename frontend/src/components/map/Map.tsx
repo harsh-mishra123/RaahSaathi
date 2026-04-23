@@ -1,8 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useState, useCallback } from 'react';
-
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+import React, { useState } from 'react';
 
 interface Barrier {
   id: string;
@@ -29,105 +27,58 @@ interface MapComponentProps {
 }
 
 const MapComponent = ({ onSelectBarrier }: MapComponentProps) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<unknown>(null);
-  const [mapError, setMapError] = useState(false);
-  const [mapLoaded, setMapLoaded] = useState(false);
+  // We calculate pseudo-positions for markers based on lat/lng range 
+  // to spread them over the static map image.
+  const minLat = 12.9000;
+  const maxLat = 13.0000;
+  const minLng = 77.5500;
+  const maxLng = 77.7800;
 
-  useEffect(() => {
-    if (!MAPBOX_TOKEN || mapInstance.current || !mapContainer.current) return;
-
-    const initMap = async () => {
-      try {
-        const mapboxgl = (await import('mapbox-gl')).default;
-
-        (mapboxgl as { accessToken: string }).accessToken = MAPBOX_TOKEN;
-
-        const map = new mapboxgl.Map({
-          container: mapContainer.current!,
-          style: 'mapbox://styles/mapbox/light-v11',
-          center: [77.5946, 12.9716],
-          zoom: 12,
-        });
-
-        mapInstance.current = map;
-
-        map.on('load', () => {
-          setMapLoaded(true);
-          map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
-          map.addControl(new mapboxgl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true }), 'top-right');
-
-          // Add custom markers
-          mockBarriers.forEach((barrier) => {
-            const el = document.createElement('div');
-            el.className = `marker-${barrier.severity.toLowerCase()}`;
-            el.setAttribute('aria-label', `${barrier.severity} barrier: ${barrier.title}`);
-            el.setAttribute('role', 'button');
-            el.setAttribute('tabindex', '0');
-
-            el.addEventListener('click', () => onSelectBarrier(barrier));
-            el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') onSelectBarrier(barrier); });
-
-            new mapboxgl.Marker({ element: el })
-              .setLngLat([barrier.lng, barrier.lat])
-              .addTo(map);
-          });
-        });
-
-        map.on('click', () => onSelectBarrier(null));
-
-      } catch {
-        setMapError(true);
-      }
-    };
-
-    initMap();
-    return () => {
-      if (mapInstance.current) {
-        (mapInstance.current as { remove: () => void }).remove();
-        mapInstance.current = null;
-      }
-    };
-  }, [onSelectBarrier]);
-
-  if (!MAPBOX_TOKEN || mapError) {
-    return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-secondary/50 text-center p-8">
-        <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4">
-          <svg className="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-          </svg>
-        </div>
-        <p className="text-sm font-medium text-muted-foreground">Map preview unavailable</p>
-        <p className="text-xs text-muted-foreground mt-1">Add <code className="bg-secondary px-1 rounded">NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN</code> to .env.local</p>
-        <div className="mt-6 grid grid-cols-3 gap-3 w-full max-w-sm">
-          {mockBarriers.map((b) => (
-            <button
-              key={b.id}
-              onClick={() => onSelectBarrier(b)}
-              className="p-2 rounded-lg border border-border bg-white text-xs text-left hover:border-accent transition-colors shadow-card"
-            >
-              <span className={`inline-block w-2 h-2 rounded-full mr-1 ${b.severity === 'Severe' ? 'bg-red-500' : b.severity === 'Moderate' ? 'bg-amber-500' : 'bg-green-500'}`} />
-              {b.title.slice(0, 20)}…
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const getPosition = (lat: number, lng: number) => {
+    const top = 100 - ((lat - minLat) / (maxLat - minLat)) * 100;
+    const left = ((lng - minLng) / (maxLng - minLng)) * 100;
+    return { top: `${Math.max(10, Math.min(90, top))}%`, left: `${Math.max(10, Math.min(90, left))}%` };
+  };
 
   return (
-    <div ref={mapContainer} className="w-full h-full">
-      {!mapLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-secondary/70 z-10">
-          <div className="flex flex-col items-center gap-2">
-            <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-            <p className="text-xs text-muted-foreground">Loading map…</p>
+    <div className="relative w-full h-full overflow-hidden bg-secondary">
+      <img 
+        src="/map_background.png" 
+        alt="Map background" 
+        className="absolute inset-0 w-full h-full object-cover"
+        onClick={() => onSelectBarrier(null)}
+      />
+      
+      {/* Markers */}
+      {mockBarriers.map((barrier) => {
+        const { top, left } = getPosition(barrier.lat, barrier.lng);
+        const bgColors = {
+          'Severe': 'bg-red-500',
+          'Moderate': 'bg-amber-500',
+          'Minor': 'bg-green-500'
+        };
+        const bgColor = bgColors[barrier.severity] || 'bg-blue-500';
+        
+        return (
+          <div
+            key={barrier.id}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectBarrier(barrier);
+            }}
+            className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-125 z-10"
+            style={{ top, left }}
+            aria-label={`${barrier.severity} barrier: ${barrier.title}`}
+            role="button"
+            tabIndex={0}
+          >
+            <div className={`w-4 h-4 rounded-full border-2 border-white shadow-md ${bgColor}`} />
+            <div className={`absolute inset-0 rounded-full animate-ping opacity-75 ${bgColor}`} />
           </div>
-        </div>
-      )}
+        );
+      })}
     </div>
   );
 };
 
-export { MapComponent };
+export default MapComponent;

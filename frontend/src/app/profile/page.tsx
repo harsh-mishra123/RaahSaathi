@@ -6,8 +6,8 @@ import { FileText, Trophy, Settings, MapPin, ThumbsUp, Award, Star, Shield, Hear
 import BarrierCard, { BarrierData } from '@/components/feed/BarrierCard';
 
 const userReports: BarrierData[] = [
-  { id: '1', title: 'Broken Pavement on MG Road', username: 'rahul_navigates', timeAgo: '2 days ago', severity: 'Severe', category: 'Broken Pavement', location: 'MG Road, Bangalore', description: 'Large crack spanning the entire footpath.', votes: 47, commentCount: 12 },
-  { id: '3', title: 'Missing Curb Cut at Indiranagar', username: 'rahul_navigates', timeAgo: '1 week ago', severity: 'Moderate', category: 'Missing Ramp', location: 'Indiranagar, Bangalore', description: 'Intersection lacks a curb cut entirely.', votes: 29, commentCount: 5 },
+  { id: '1', title: 'Broken Pavement on MG Road', username: 'rahul_navigates', created_at: '2024-04-10T12:00:00Z', severity: 'Severe', category: 'Broken Pavement', location: 'MG Road, Bangalore', description: 'Large crack spanning the entire footpath.', upvotes: 47, downvotes: 2, comment_count: 12 },
+  { id: '3', title: 'Missing Curb Cut at Indiranagar', username: 'rahul_navigates', created_at: '2024-04-05T09:00:00Z', severity: 'Moderate', category: 'Missing Ramp', location: 'Indiranagar, Bangalore', description: 'Intersection lacks a curb cut entirely.', upvotes: 29, downvotes: 1, comment_count: 5 },
 ];
 
 const badges = [

@@ -11,6 +11,7 @@ class BarrierCreate(BaseModel):
     photo_url: Optional[str] = None
     ai_tags: Optional[dict] = None
 
+
 class BarrierResponse(BaseModel):
     id: str
     latitude: float

@@ -98,6 +98,24 @@ CREATE POLICY "Users can update their own barriers." ON public.barriers FOR UPDA
 -- Policies for votes
 CREATE POLICY "Votes are viewable by everyone." ON public.votes FOR SELECT USING (true);
 CREATE POLICY "Users can insert votes." ON public.votes FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- ============================================
+-- STORAGE
+-- ============================================
+-- Create a bucket for barrier images
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('barrier-images', 'barrier-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Policies for barrier-images bucket
+CREATE POLICY "Barrier images are publicly accessible."
+ON storage.objects FOR SELECT
+USING ( bucket_id = 'barrier-images' );
+
+CREATE POLICY "Anyone can upload a barrier image."
+ON storage.objects FOR INSERT
+WITH CHECK ( bucket_id = 'barrier-images' );
+
 CREATE POLICY "Users can update their own votes." ON public.votes FOR UPDATE USING (auth.uid() = user_id);
 
 -- Policies for comments
