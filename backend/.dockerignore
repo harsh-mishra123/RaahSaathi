@@ -1,0 +1,15 @@
+venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.env
+.env.example
+tests
+scripts
+.DS_Store
+.git
+.github
+Dockerfile
+docker-compose.yml
