@@ -30,6 +30,9 @@ jobs:
       - name: Build
         working-directory: ./frontend
         run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: "https://dummy.supabase.co"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "dummy-key"
 
       - name: Build Frontend Docker Image
         working-directory: ./frontend
@@ -55,10 +58,13 @@ jobs:
 
       - name: Run Tests
         working-directory: ./backend
-        run: pytest
+        run: python -m pytest tests/
         env:
+          PYTHONPATH: .
           GROQ_API_KEY: "dummy_key_for_ci"
           ENVIRONMENT: "test"
+          SUPABASE_URL: "https://dummy.supabase.co"
+          SUPABASE_KEY: "dummy-key"
 
       - name: Build Backend Docker Image
         working-directory: ./backend
